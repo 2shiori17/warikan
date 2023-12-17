@@ -1,0 +1,22 @@
+{
+  "name": "warikan",
+  "version": "0.1.0",
+  "description": "",
+  "private": true,
+  "author": "2shiori17 <2shiori17@proton.me>",
+  "license": "MIT",
+  "workspaces": [
+    "frontend"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/2shiori17/warikan.git"
+  },
+  "bugs": {
+    "url": "https://github.com/2shiori17/warikan/issues"
+  },
+  "homepage": "https://github.com/2shiori17/warikan#readme"
+}
