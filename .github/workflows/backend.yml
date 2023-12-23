@@ -1,0 +1,19 @@
+name: backend
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: dtolnay/rust-toolchain@stable
+      with:
+        components: rustfmt, clippy
+    - run: cargo check -p backend
+    - run: cargo fmt -p backend -- --check
+    - run: cargo clippy -p backend -- -D warnings
