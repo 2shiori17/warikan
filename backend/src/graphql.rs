@@ -1,4 +1,4 @@
-use crate::{app, auth, user};
+use crate::{app, auth};
 use async_graphql::{http::GraphiQLSource, MergedObject, Object};
 use async_graphql_axum::{GraphQLRequest, GraphQLResponse};
 use axum::{
@@ -7,10 +7,10 @@ use axum::{
 };
 
 #[derive(Default, MergedObject)]
-pub struct Query(Greet, user::UserQuery);
+pub struct Query(Greet);
 
 #[derive(Default, MergedObject)]
-pub struct Mutation(user::UserMutation);
+pub struct Mutation();
 
 pub async fn graphql(
     State(state): State<app::State>,
