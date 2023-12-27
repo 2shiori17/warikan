@@ -14,7 +14,7 @@ export function Layout(props: LayoutProps) {
       <header>
         <Navbar />
       </header>
-      <main>
+      <main className="my-4">
         {props.children}
       </main>
       <footer className="sticky top-[100vh]">
