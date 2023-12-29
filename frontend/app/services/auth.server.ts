@@ -18,7 +18,7 @@ const auth0Strategy = new Auth0Strategy(
   async (data) => {
     // TODO(2shiori17): implement logic
     console.log(data);
-    return { id: data.profile.id! }
+    return { id: data.profile.id!, name: data.profile.id! }
   }
 );
 
