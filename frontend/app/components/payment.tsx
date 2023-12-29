@@ -6,13 +6,13 @@ import { Payment } from "~/lib/data"
 import { Card, CardHeader, CardTitle, CardDescription } from "~/components/ui/card";
 
 export interface PaymentCardProps {
-  group_id: string,
+  groupId: string,
   payment: Payment,
 }
 
 export function PaymentCard(props: PaymentCardProps) {
   return (
-    <Link to={`/app/groups/${props.group_id}/payments/${props.payment.id}`}>
+    <Link to={`/app/groups/${props.groupId}/payments/${props.payment.id}`}>
       <Card>
         <CardHeader>
           <CardTitle>
@@ -35,7 +35,7 @@ export function PaymentCard(props: PaymentCardProps) {
 }
 
 export interface PaymentCardListProps {
-  group_id: string,
+  groupId: string,
   payments: Payment[],
 }
 
@@ -45,7 +45,7 @@ export function PaymentCardList(props: PaymentCardListProps) {
       {
         props.payments
           .sort((a, b) => compareDesc(a.created_at, b.created_at))
-          .map((payment) => <PaymentCard key={payment.id} group_id={props.group_id} payment={payment} />)
+          .map((payment) => <PaymentCard key={payment.id} groupId={props.groupId} payment={payment} />)
       }
     </div>
   )
