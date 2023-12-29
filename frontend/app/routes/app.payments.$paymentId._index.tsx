@@ -7,22 +7,20 @@ import { getPayment } from "~/lib/data";
 import { PaymentCard } from "~/components/payment";
 
 export const loader = async ({ params }: LoaderFunctionArgs) => {
-  invariant(params.groupId, "Missing groupId param");
   invariant(params.paymentId, "Missing paymentId param");
-  const groupId = params.groupId;
   const payment = await getPayment(params.paymentId);
   if (!payment) {
     throw new Response("Not Found", { status: 404 });
   }
-  return json({ groupId, payment });
+  return json({ payment });
 };
 
 export default function GroupDetail() {
-  const { groupId, payment } = useLoaderData<typeof loader>();
+  const { payment } = useLoaderData<typeof loader>();
 
   return (
     <div>
-      <PaymentCard groupId={groupId} payment={payment} />
+      <PaymentCard payment={payment} />
     </div>
   )
 }

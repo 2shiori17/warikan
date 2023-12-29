@@ -25,7 +25,7 @@ export default function GroupDetail() {
       <GroupCard group={group} />
       <div>
         <H3 className="pt-4 pb-2">Payments</H3>
-        <PaymentCardList groupId={group.id} payments={group.payments} />
+        <PaymentCardList payments={group.payments} />
       </div>
     </div>
   )
