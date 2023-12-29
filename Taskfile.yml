@@ -1,0 +1,29 @@
+version: '3'
+
+tasks:
+  front:dev:
+    dir: 'frontend'
+    cmds:
+      - npm run dev
+
+  front:lint:
+    dir: 'frontend'
+    cmds:
+      - npm run typecheck
+      - npm run lint
+
+  back:dev:
+    dir: 'backend'
+    cmds:
+      - cargo run
+
+  back:lint:
+    dir: 'backend'
+    cmds:
+      - cargo check
+      - cargo clippy
+
+  back:fmt:
+    dir: 'backend'
+    cmds:
+      - cargo fmt
