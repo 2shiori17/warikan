@@ -1,6 +1,7 @@
 use crate::{
     entities::{User, UserID},
-    repositories::{Mongo, UserRepository},
+    repositories::Mongo,
+    usecases::UseCase,
 };
 use async_graphql::{Context, Object};
 
@@ -17,8 +18,8 @@ pub struct UserQuery;
 #[Object]
 impl UserQuery {
     async fn get_user(&self, ctx: &Context<'_>, id: UserID) -> async_graphql::Result<Option<User>> {
-        let mongo = ctx.data::<Mongo>()?;
-        let user = mongo.get_user(&id).await?;
+        let usecase = ctx.data::<UseCase<Mongo>>()?;
+        let user = usecase.get_user_proper(&id).await?;
         Ok(user)
     }
 }

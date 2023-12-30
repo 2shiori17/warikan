@@ -1,10 +1,10 @@
 use crate::{
     entities::{Group, GroupID, Payment, User},
-    repositories::{GroupRepository, Mongo, MongoError, PaymentRepository, UserRepository},
+    repositories::Mongo,
+    usecases::UseCase,
 };
 use async_graphql::{Context, Object};
 use chrono::{DateTime, Local};
-use futures::future::try_join_all;
 
 #[Object]
 impl Group {
@@ -17,20 +17,14 @@ impl Group {
     }
 
     async fn participants(&self, ctx: &Context<'_>) -> async_graphql::Result<Vec<User>> {
-        let mongo = ctx.data::<Mongo>()?;
-        let participants = try_join_all(self.participants.iter().map(|id| async {
-            mongo
-                .get_user(id)
-                .await
-                .and_then(|x| x.ok_or(MongoError::NotFound))
-        }))
-        .await?;
+        let usecase = ctx.data::<UseCase<Mongo>>()?;
+        let participants = usecase.get_users(&self.participants).await?;
         Ok(participants)
     }
 
     async fn payments(&self, ctx: &Context<'_>) -> async_graphql::Result<Vec<Payment>> {
-        let mongo = ctx.data::<Mongo>()?;
-        let payments = mongo.get_payments_by_group(&self.id).await?;
+        let usecase = ctx.data::<UseCase<Mongo>>()?;
+        let payments = usecase.get_payments_by_group(&self.id).await?;
         Ok(payments)
     }
 }
@@ -45,8 +39,8 @@ impl GroupQuery {
         ctx: &Context<'_>,
         id: GroupID,
     ) -> async_graphql::Result<Option<Group>> {
-        let mongo = ctx.data::<Mongo>()?;
-        let group = mongo.get_group(&id).await?;
+        let usecase = ctx.data::<UseCase<Mongo>>()?;
+        let group = usecase.get_group_proper(&id).await?;
         Ok(group)
     }
 }

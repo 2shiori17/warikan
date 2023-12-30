@@ -19,9 +19,6 @@ pub struct Mongo {
 pub enum MongoError {
     #[error("mongodb error")]
     Mongo(#[from] mongodb::error::Error),
-
-    #[error("not found")]
-    NotFound,
 }
 
 #[derive(Debug)]
