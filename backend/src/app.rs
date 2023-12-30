@@ -1,5 +1,8 @@
-use crate::{auth, graphql};
-use async_graphql::{EmptySubscription, Schema};
+use crate::{
+    auth,
+    controllers::{graphiql, graphql, Query},
+};
+use async_graphql::{EmptyMutation, EmptySubscription, Schema};
 use axum::{routing::get, Router};
 use clap::Parser;
 use jsonwebtoken::jwk::JwkSet;
@@ -31,7 +34,7 @@ pub enum Error {
 
 #[derive(Clone)]
 pub struct State {
-    pub schema: Schema<graphql::Query, graphql::Mutation, EmptySubscription>,
+    pub schema: Schema<Query, EmptyMutation, EmptySubscription>,
     pub jwks: JwkSet,
     pub auth0_audience: String,
 }
@@ -57,12 +60,7 @@ impl App {
         let jwks = auth::fetch_jwks(auth0_issuer).await?;
 
         // GraphQL
-        let schema = Schema::build(
-            graphql::Query::default(),
-            graphql::Mutation::default(),
-            EmptySubscription,
-        )
-        .finish();
+        let schema = Schema::build(Query::default(), EmptyMutation, EmptySubscription).finish();
 
         // Server
         let state = State {
@@ -71,7 +69,7 @@ impl App {
             auth0_audience,
         };
         let router = Router::new()
-            .route("/", get(graphql::graphiql).post(graphql::graphql))
+            .route("/", get(graphiql).post(graphql))
             .with_state(state);
         let addr = SocketAddr::new(IpAddr::V4(Ipv4Addr::LOCALHOST), port);
         axum::serve(TcpListener::bind(addr).await?, router).await?;
