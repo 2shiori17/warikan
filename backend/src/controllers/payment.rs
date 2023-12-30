@@ -1,6 +1,6 @@
 use crate::{
     entities::{Group, Payment, PaymentID, User},
-    mongo::{Mongo, MongoError},
+    repositories::{GroupRepository, Mongo, MongoError, PaymentRepository, UserRepository},
 };
 use async_graphql::{Context, Object};
 use chrono::{DateTime, Local};

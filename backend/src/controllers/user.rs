@@ -1,6 +1,6 @@
 use crate::{
     entities::{User, UserID},
-    mongo::Mongo,
+    repositories::{Mongo, UserRepository},
 };
 use async_graphql::{Context, Object};
 
