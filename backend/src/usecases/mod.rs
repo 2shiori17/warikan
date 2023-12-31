@@ -3,14 +3,18 @@ mod payment;
 mod user;
 
 use crate::repositories::Repository;
+use std::sync::Arc;
 use thiserror::Error;
 
-#[derive(Debug)]
-pub struct UseCase<R: Repository> {
-    pub repository: R,
+pub struct UseCase {
+    pub repository: Arc<dyn Repository>,
 }
 
-pub type UseCaseResult<T> = Result<T, Box<dyn std::error::Error + Send + Sync>>;
+impl UseCase {
+    pub fn new(repository: Arc<dyn Repository>) -> Self {
+        Self { repository }
+    }
+}
 
 #[derive(Debug, Error)]
 pub enum UseCaseError {

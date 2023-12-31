@@ -1,10 +1,9 @@
 use crate::{
     entities::{GroupID, Payment, PaymentID},
-    repositories::Repository,
     usecases::{UseCase, UseCaseError},
 };
 
-impl<R: Repository> UseCase<R> {
+impl UseCase {
     pub async fn get_payment_proper(
         &self,
         id: &PaymentID,

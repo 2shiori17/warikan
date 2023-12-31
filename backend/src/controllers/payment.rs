@@ -1,6 +1,5 @@
 use crate::{
     entities::{Group, Payment, PaymentID, User},
-    repositories::Mongo,
     usecases::UseCase,
 };
 use async_graphql::{Context, Object};
@@ -17,19 +16,19 @@ impl Payment {
     }
 
     async fn group(&self, ctx: &Context<'_>) -> async_graphql::Result<Group> {
-        let usecase = ctx.data::<UseCase<Mongo>>()?;
+        let usecase = ctx.data::<UseCase>()?;
         let group = usecase.get_group(&self.group).await?;
         Ok(group)
     }
 
     async fn creditor(&self, ctx: &Context<'_>) -> async_graphql::Result<User> {
-        let usecase = ctx.data::<UseCase<Mongo>>()?;
+        let usecase = ctx.data::<UseCase>()?;
         let creditor = usecase.get_user(&self.creditor).await?;
         Ok(creditor)
     }
 
     async fn debtors(&self, ctx: &Context<'_>) -> async_graphql::Result<Vec<User>> {
-        let usecase = ctx.data::<UseCase<Mongo>>()?;
+        let usecase = ctx.data::<UseCase>()?;
         let debtors = usecase.get_users(&self.debtors).await?;
         Ok(debtors)
     }
@@ -45,7 +44,7 @@ impl PaymentQuery {
         ctx: &Context<'_>,
         id: PaymentID,
     ) -> async_graphql::Result<Option<Payment>> {
-        let usecase = ctx.data::<UseCase<Mongo>>()?;
+        let usecase = ctx.data::<UseCase>()?;
         let payment = usecase.get_payment_proper(&id).await?;
         Ok(payment)
     }

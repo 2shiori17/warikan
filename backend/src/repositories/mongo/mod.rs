@@ -4,13 +4,15 @@ mod user;
 
 use crate::repositories::Repository;
 use mongodb::{Client, Database};
+use shaku::Component;
 use thiserror::Error;
 
 pub const MONGO_COLLECTION_GROUPS: &str = "groups";
 pub const MONGO_COLLECTION_PAYMENTS: &str = "payments";
 pub const MONGO_COLLECTION_USERS: &str = "users";
 
-#[derive(Debug)]
+#[derive(Debug, Component)]
+#[shaku(interface = Repository)]
 pub struct Mongo {
     pub database: Database,
 }
@@ -22,15 +24,15 @@ pub enum MongoError {
 }
 
 #[derive(Debug)]
-pub struct MongoConfig {
-    pub uri: String,
-    pub database: String,
+pub struct MongoConfig<'a> {
+    pub uri: &'a str,
+    pub database: &'a str,
 }
 
 impl Mongo {
-    pub async fn new(config: MongoConfig) -> Result<Self, MongoError> {
-        let client = Client::with_uri_str(&config.uri).await?;
-        let database = client.database(&config.database);
+    pub async fn new(config: MongoConfig<'_>) -> Result<Self, MongoError> {
+        let client = Client::with_uri_str(config.uri).await?;
+        let database = client.database(config.database);
         let mongo = Mongo { database };
         mongo.create_index().await?;
         Ok(mongo)
@@ -44,5 +46,3 @@ impl Mongo {
         Ok(())
     }
 }
-
-impl Repository for Mongo {}

@@ -2,6 +2,7 @@ use crate::{
     entities::{User, UserID},
     repositories::{Mongo, MongoError, UserRepository, MONGO_COLLECTION_USERS},
 };
+use async_trait::async_trait;
 use mongodb::{
     bson::{doc, Bson},
     options::IndexOptions,
@@ -32,10 +33,12 @@ impl Mongo {
     }
 }
 
+#[async_trait]
 impl UserRepository for Mongo {
-    type Error = MongoError;
-
-    async fn get_user(&self, id: &UserID) -> Result<Option<User>, Self::Error> {
+    async fn get_user(
+        &self,
+        id: &UserID,
+    ) -> Result<Option<User>, Box<dyn std::error::Error + Send + Sync>> {
         let users: Collection<User> = self.database.collection(MONGO_COLLECTION_USERS);
 
         let filter = doc! { "id": id };

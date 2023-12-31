@@ -2,6 +2,7 @@ use crate::{
     entities::{Group, GroupID},
     repositories::{GroupRepository, Mongo, MongoError, MONGO_COLLECTION_GROUPS},
 };
+use async_trait::async_trait;
 use mongodb::{
     bson::{doc, Bson},
     options::IndexOptions,
@@ -32,10 +33,12 @@ impl Mongo {
     }
 }
 
+#[async_trait]
 impl GroupRepository for Mongo {
-    type Error = MongoError;
-
-    async fn get_group(&self, id: &GroupID) -> Result<Option<Group>, Self::Error> {
+    async fn get_group(
+        &self,
+        id: &GroupID,
+    ) -> Result<Option<Group>, Box<dyn std::error::Error + Send + Sync>> {
         let groups: Collection<Group> = self.database.collection(MONGO_COLLECTION_GROUPS);
 
         let filter = doc! { "id": id };

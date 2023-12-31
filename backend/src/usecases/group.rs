@@ -1,10 +1,9 @@
 use crate::{
     entities::{Group, GroupID},
-    repositories::Repository,
     usecases::{UseCase, UseCaseError},
 };
 
-impl<R: Repository> UseCase<R> {
+impl UseCase {
     pub async fn get_group_proper(
         &self,
         id: &GroupID,
