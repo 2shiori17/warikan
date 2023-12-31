@@ -1,5 +1,13 @@
+mod group;
+mod payment;
+mod user;
+
+pub use group::*;
+pub use payment::*;
+pub use user::*;
+
 use crate::{app, auth};
-use async_graphql::{http::GraphiQLSource, MergedObject, Object};
+use async_graphql::{http::GraphiQLSource, MergedObject};
 use async_graphql_axum::{GraphQLRequest, GraphQLResponse};
 use axum::{
     extract::State,
@@ -7,10 +15,7 @@ use axum::{
 };
 
 #[derive(Default, MergedObject)]
-pub struct Query(Greet);
-
-#[derive(Default, MergedObject)]
-pub struct Mutation();
+pub struct Query(GroupQuery, PaymentQuery, UserQuery);
 
 pub async fn graphql(
     State(state): State<app::State>,
@@ -24,14 +29,4 @@ pub async fn graphql(
 
 pub async fn graphiql() -> impl IntoResponse {
     response::Html(GraphiQLSource::build().endpoint("/").finish())
-}
-
-#[derive(Default)]
-pub struct Greet;
-
-#[Object]
-impl Greet {
-    async fn greet(&self, name: String) -> String {
-        format!("Hello, {}!", name)
-    }
 }

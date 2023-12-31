@@ -1,4 +1,4 @@
-use backend::App;
+use backend::app::App;
 use dotenvy::dotenv;
 
 #[tokio::main]
