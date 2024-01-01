@@ -3,7 +3,7 @@ use crate::{
     usecases::UseCase,
 };
 use async_graphql::{Context, Object};
-use chrono::{DateTime, Local};
+use chrono::{DateTime, Utc};
 
 #[Object]
 impl Group {
@@ -11,7 +11,7 @@ impl Group {
         self.id.clone()
     }
 
-    async fn created_at(&self) -> DateTime<Local> {
+    async fn created_at(&self) -> DateTime<Utc> {
         self.created_at
     }
 

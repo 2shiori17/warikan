@@ -21,3 +21,10 @@ jobs:
     - run: cargo check -p backend
     - run: cargo fmt -p backend -- --check
     - run: cargo clippy -p backend -- -D warnings
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: dtolnay/rust-toolchain@stable
+    - run: cargo test -p backend

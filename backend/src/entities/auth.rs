@@ -8,7 +8,11 @@ use std::str::FromStr;
 use thiserror::Error;
 use url::Url;
 
+#[cfg(test)]
+use fake::Dummy;
+
 #[derive(Debug, Serialize, Deserialize)]
+#[cfg_attr(test, derive(Dummy))]
 pub struct Claims {
     pub iss: String,
     pub sub: String,
@@ -20,6 +24,7 @@ pub struct Claims {
 }
 
 #[derive(Debug)]
+#[cfg_attr(test, derive(Dummy))]
 pub enum AuthState {
     Authorized(Claims),
     UnAuthorized,

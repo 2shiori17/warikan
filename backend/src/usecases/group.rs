@@ -50,3 +50,44 @@ impl UseCase {
         false
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{entities::Claims, repositories::MockRepository};
+    use fake::{Fake, Faker};
+    use std::sync::Arc;
+
+    #[tokio::test]
+    async fn get_group_unauthorized() {
+        let group: Group = Faker.fake();
+        let claims: Claims = Faker.fake();
+
+        let id = group.id.clone();
+        let auth = AuthState::Authorized(claims);
+
+        let mut mock = MockRepository::new();
+        mock.expect_get_group()
+            .return_once(move |_| Ok(Some(group)));
+
+        let usecase = UseCase::new(Arc::new(mock));
+        assert!(usecase.get_group(&id, &auth).await.is_err());
+    }
+
+    #[tokio::test]
+    async fn get_group_authorized() {
+        let group: Group = Faker.fake();
+        let mut claims: Claims = Faker.fake();
+        claims.sub = group.participants[0].to_string();
+
+        let id = group.id.clone();
+        let auth = AuthState::Authorized(claims);
+
+        let mut mock = MockRepository::new();
+        mock.expect_get_group()
+            .return_once(move |_| Ok(Some(group)));
+
+        let usecase = UseCase::new(Arc::new(mock));
+        assert!(usecase.get_group(&id, &auth).await.is_ok());
+    }
+}

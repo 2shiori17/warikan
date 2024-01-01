@@ -17,7 +17,6 @@ clap = { version = "4.4", features = ["derive", "env"] }
 dotenvy = "0.15"
 futures = "0.3"
 jsonwebtoken = "9.0"
-mockall = "0.12"
 mongodb = { version = "2.8", features = ["tokio-runtime"] }
 reqwest = { version = "0.11", features = ["json"] }
 serde = { version = "1.0", features = ["derive"] }
@@ -26,3 +25,8 @@ shaku = "0.6"
 thiserror = "1.0"
 tokio = { version = "1.8", features = ["full"] }
 url = "2.5"
+
+[dev-dependencies]
+fake = { version = "2.9", features = ["derive", "chrono"] }
+mockall = "0.12"
+rand = "0.8"

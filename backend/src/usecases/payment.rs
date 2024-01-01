@@ -47,3 +47,53 @@ impl UseCase {
         Ok(payments)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{
+        entities::{Claims, Group},
+        repositories::MockRepository,
+    };
+    use fake::{Fake, Faker};
+    use std::sync::Arc;
+
+    #[tokio::test]
+    async fn get_payment_unauthorized() {
+        let payment: Payment = Faker.fake();
+        let group: Group = Faker.fake();
+        let claims: Claims = Faker.fake();
+
+        let id = payment.id.clone();
+        let auth = AuthState::Authorized(claims);
+
+        let mut mock = MockRepository::new();
+        mock.expect_get_payment()
+            .return_once(move |_| Ok(Some(payment)));
+        mock.expect_get_group()
+            .return_once(move |_| Ok(Some(group)));
+
+        let usecase = UseCase::new(Arc::new(mock));
+        assert!(usecase.get_payment(&id, &auth).await.is_err());
+    }
+
+    #[tokio::test]
+    async fn get_payment_authorized() {
+        let payment: Payment = Faker.fake();
+        let group: Group = Faker.fake();
+        let mut claims: Claims = Faker.fake();
+        claims.sub = group.participants[0].to_string();
+
+        let id = payment.id.clone();
+        let auth = AuthState::Authorized(claims);
+
+        let mut mock = MockRepository::new();
+        mock.expect_get_payment()
+            .return_once(move |_| Ok(Some(payment)));
+        mock.expect_get_group()
+            .return_once(move |_| Ok(Some(group)));
+
+        let usecase = UseCase::new(Arc::new(mock));
+        assert!(usecase.get_payment(&id, &auth).await.is_ok());
+    }
+}
