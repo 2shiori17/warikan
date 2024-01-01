@@ -1,9 +1,9 @@
 use crate::{
-    entities::{Group, Payment, PaymentID, User},
+    entities::{AuthState, Group, Payment, PaymentID, User},
     usecases::UseCase,
 };
 use async_graphql::{Context, Object};
-use chrono::{DateTime, Local};
+use chrono::{DateTime, Utc};
 
 #[Object]
 impl Payment {
@@ -11,13 +11,14 @@ impl Payment {
         self.id.clone()
     }
 
-    async fn created_at(&self) -> DateTime<Local> {
+    async fn created_at(&self) -> DateTime<Utc> {
         self.created_at
     }
 
     async fn group(&self, ctx: &Context<'_>) -> async_graphql::Result<Group> {
         let usecase = ctx.data::<UseCase>()?;
-        let group = usecase.get_group(&self.group).await?;
+        let auth = ctx.data::<AuthState>()?;
+        let group = usecase.get_group(&self.group, auth).await?;
         Ok(group)
     }
 
@@ -45,7 +46,8 @@ impl PaymentQuery {
         id: PaymentID,
     ) -> async_graphql::Result<Option<Payment>> {
         let usecase = ctx.data::<UseCase>()?;
-        let payment = usecase.get_payment_proper(&id).await?;
+        let auth = ctx.data::<AuthState>()?;
+        let payment = usecase.get_payment_proper(&id, auth).await?;
         Ok(payment)
     }
 }

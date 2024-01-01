@@ -15,7 +15,7 @@ tasks:
   back:dev:
     dir: 'backend'
     cmds:
-      - cargo run
+      - cargo watch -x run
 
   back:lint:
     dir: 'backend'
@@ -27,3 +27,8 @@ tasks:
     dir: 'backend'
     cmds:
       - cargo fmt
+
+  back:doc:
+    dir: 'backend'
+    cmds:
+      - cargo watch -x doc

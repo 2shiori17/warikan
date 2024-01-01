@@ -25,3 +25,8 @@ shaku = "0.6"
 thiserror = "1.0"
 tokio = { version = "1.8", features = ["full"] }
 url = "2.5"
+
+[dev-dependencies]
+fake = { version = "2.9", features = ["derive", "chrono"] }
+mockall = "0.12"
+rand = "0.8"

@@ -20,4 +20,7 @@ impl UseCase {
 pub enum UseCaseError {
     #[error("not found")]
     NotFound,
+
+    #[error("unauthorized")]
+    UnAuthorized,
 }

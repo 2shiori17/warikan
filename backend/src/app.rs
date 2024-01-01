@@ -1,13 +1,12 @@
 use crate::{
-    auth,
     controllers::{graphiql, graphql, Query},
+    entities::Validator,
     repositories::{Mongo, MongoConfig, MongoError},
     usecases::UseCase,
 };
 use async_graphql::{EmptyMutation, EmptySubscription, Schema};
 use axum::{routing::get, Router};
 use clap::Parser;
-use jsonwebtoken::jwk::JwkSet;
 use shaku::{module, HasComponent};
 use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use thiserror::Error;
@@ -54,8 +53,7 @@ pub enum Error {
 #[derive(Clone)]
 pub struct State {
     pub schema: Schema<Query, EmptyMutation, EmptySubscription>,
-    pub jwks: JwkSet,
-    pub auth0_audience: String,
+    pub validator: Validator,
 }
 
 pub struct App {
@@ -76,12 +74,14 @@ impl App {
             mongo_db,
         } = self.args;
 
-        // Module
+        // Mongo
         let mongo = Mongo::new(MongoConfig {
             uri: &mongo_uri,
             database: &mongo_db,
         })
         .await?;
+
+        // Module
         let module = Module::builder()
             .with_component_override(Box::new(mongo))
             .build();
@@ -89,20 +89,16 @@ impl App {
         // UseCase
         let usecase = UseCase::new(module.resolve());
 
-        // Auth
-        let jwks = auth::fetch_jwks(auth0_issuer).await?;
-
         // GraphQL
         let schema = Schema::build(Query::default(), EmptyMutation, EmptySubscription)
             .data(usecase)
             .finish();
 
+        // Auth
+        let validator = Validator::new(auth0_issuer, auth0_audience).await?;
+
         // Server
-        let state = State {
-            schema,
-            jwks,
-            auth0_audience,
-        };
+        let state = State { schema, validator };
         let router = Router::new()
             .route("/", get(graphiql).post(graphql))
             .with_state(state);
