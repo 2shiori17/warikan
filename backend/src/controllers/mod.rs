@@ -6,7 +6,10 @@ pub use group::*;
 pub use payment::*;
 pub use user::*;
 
-use crate::{app, entities::Claims};
+use crate::{
+    app,
+    entities::{AuthState, Claims},
+};
 use async_graphql::{http::GraphiQLSource, MergedObject};
 use async_graphql_axum::{GraphQLRequest, GraphQLResponse};
 use async_trait::async_trait;
@@ -30,19 +33,13 @@ pub async fn graphql(
     auth: AuthState,
     req: GraphQLRequest,
 ) -> GraphQLResponse {
-    let req = req.into_inner();
-    dbg!(auth);
+    dbg!(&auth);
+    let req = req.into_inner().data(auth);
     state.schema.execute(req).await.into()
 }
 
 pub async fn graphiql() -> impl IntoResponse {
     response::Html(GraphiQLSource::build().endpoint("/").finish())
-}
-
-#[derive(Debug)]
-pub enum AuthState {
-    Authorized(Claims),
-    UnAuthorized,
 }
 
 #[async_trait]

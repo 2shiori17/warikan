@@ -10,13 +10,19 @@ use url::Url;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
-    iss: String,
-    sub: String,
-    aud: Vec<String>,
-    iat: u64,
-    exp: u64,
-    azp: String,
-    scope: String,
+    pub iss: String,
+    pub sub: String,
+    pub aud: Vec<String>,
+    pub iat: u64,
+    pub exp: u64,
+    pub azp: String,
+    pub scope: String,
+}
+
+#[derive(Debug)]
+pub enum AuthState {
+    Authorized(Claims),
+    UnAuthorized,
 }
 
 #[derive(Debug, Error)]
