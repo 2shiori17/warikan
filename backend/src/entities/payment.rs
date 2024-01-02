@@ -1,6 +1,7 @@
 use crate::entities::{GroupID, UserID};
 use async_graphql::{types::ID, NewType};
 use chrono::{DateTime, Utc};
+use nanoid::nanoid;
 use serde::{Deserialize, Serialize};
 
 #[cfg(test)]
@@ -11,7 +12,7 @@ use rand::Rng;
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, NewType)]
 pub struct PaymentID(pub ID);
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(test, derive(Dummy))]
 pub struct Payment {
     pub id: PaymentID,
@@ -39,5 +40,17 @@ impl Dummy<Faker> for PaymentID {
     fn dummy_with_rng<R: Rng + ?Sized>(config: &Faker, rng: &mut R) -> Self {
         let s = String::dummy_with_rng(config, rng);
         PaymentID(ID(s))
+    }
+}
+
+impl Payment {
+    pub fn new(group: GroupID, creditor: UserID, debtors: Vec<UserID>) -> Self {
+        Self {
+            id: PaymentID::new(nanoid!()),
+            created_at: Utc::now(),
+            group,
+            creditor,
+            debtors,
+        }
     }
 }

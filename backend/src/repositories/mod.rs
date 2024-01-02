@@ -38,6 +38,16 @@ pub trait GroupRepository: Interface {
 #[async_trait]
 #[cfg_attr(test, automock)]
 pub trait PaymentRepository: Interface {
+    async fn create_payment(
+        &self,
+        payment: Payment,
+    ) -> Result<Payment, Box<dyn std::error::Error + Send + Sync>>;
+
+    async fn delete_payment(
+        &self,
+        id: &PaymentID,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>>;
+
     async fn get_payment(
         &self,
         id: &PaymentID,
@@ -64,7 +74,10 @@ mock! {
 
     #[async_trait]
     impl GroupRepository for Repository {
-        async fn create_group(&self, group: Group) -> Result<Group, Box<dyn std::error::Error + Send + Sync>>;
+        async fn create_group(
+            &self,
+            group: Group
+        ) -> Result<Group, Box<dyn std::error::Error + Send + Sync>>;
 
         async fn delete_group(
             &self,
@@ -79,6 +92,16 @@ mock! {
 
     #[async_trait]
     impl PaymentRepository for Repository {
+        async fn create_payment(
+            &self,
+            payment: Payment,
+        ) -> Result<Payment, Box<dyn std::error::Error + Send + Sync>>;
+
+        async fn delete_payment(
+            &self,
+            id: &PaymentID,
+        ) -> Result<(), Box<dyn std::error::Error + Send + Sync>>;
+
         async fn get_payment(
             &self,
             id: &PaymentID,

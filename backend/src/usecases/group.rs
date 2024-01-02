@@ -22,7 +22,7 @@ impl UseCase {
         id: &GroupID,
         auth: &AuthState,
     ) -> Result<GroupID, Box<dyn std::error::Error + Send + Sync>> {
-        if self.have_authority(id, auth).await {
+        if self.have_authority_group(id, auth).await {
             self.repository.delete_group(id).await?;
             Ok(id.clone())
         } else {
@@ -67,7 +67,7 @@ impl UseCase {
     }
 
     // TODO(2shiori17): `get_group_opt`を使ったロジックに変更する
-    pub async fn have_authority(&self, id: &GroupID, auth: &AuthState) -> bool {
+    pub async fn have_authority_group(&self, id: &GroupID, auth: &AuthState) -> bool {
         if let AuthState::Authorized(claims) = auth {
             if let Ok(Some(group)) = self.repository.get_group(id).await {
                 return group.participants.contains(&UserID::new(&claims.sub));
@@ -209,7 +209,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn have_authority_unauthorized_1() {
+    async fn have_authority_group_unauthorized_1() {
         let group: Group = Faker.fake();
 
         let id = group.id.clone();
@@ -220,11 +220,11 @@ mod tests {
             .return_once(move |_| Ok(Some(group)));
 
         let usecase = UseCase::new(Arc::new(mock));
-        assert!(!usecase.have_authority(&id, &auth).await);
+        assert!(!usecase.have_authority_group(&id, &auth).await);
     }
 
     #[tokio::test]
-    async fn have_authority_unauthorized_2() {
+    async fn have_authority_group_unauthorized_2() {
         let group: Group = Faker.fake();
         let claims: Claims = Faker.fake();
 
@@ -236,11 +236,11 @@ mod tests {
             .return_once(move |_| Ok(Some(group)));
 
         let usecase = UseCase::new(Arc::new(mock));
-        assert!(!usecase.have_authority(&id, &auth).await);
+        assert!(!usecase.have_authority_group(&id, &auth).await);
     }
 
     #[tokio::test]
-    async fn have_authority_authorized() {
+    async fn have_authority_group_authorized() {
         let group: Group = Faker.fake();
         let mut claims: Claims = Faker.fake();
 
@@ -253,6 +253,6 @@ mod tests {
             .return_once(move |_| Ok(Some(group)));
 
         let usecase = UseCase::new(Arc::new(mock));
-        assert!(usecase.have_authority(&id, &auth).await);
+        assert!(usecase.have_authority_group(&id, &auth).await);
     }
 }

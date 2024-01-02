@@ -86,10 +86,10 @@ mod tests {
 
         let group: Group = Faker.fake();
 
-        let group1 = mongo.create_group(group).await.unwrap();
-        let group2 = mongo.get_group(&group1.id).await.unwrap();
+        let create = mongo.create_group(group).await.unwrap();
+        let get = mongo.get_group(&create.id).await.unwrap();
 
-        assert_eq!(Some(group1), group2);
+        assert_eq!(Some(create), get);
     }
 
     #[tokio::test]
@@ -103,10 +103,10 @@ mod tests {
 
         let group: Group = Faker.fake();
 
-        let group1 = mongo.create_group(group).await.unwrap();
-        mongo.delete_group(&group1.id).await.unwrap();
-        let group2 = mongo.get_group(&group1.id).await.unwrap();
+        let create = mongo.create_group(group).await.unwrap();
+        mongo.delete_group(&create.id).await.unwrap();
+        let delete = mongo.get_group(&create.id).await.unwrap();
 
-        assert_eq!(group2, None);
+        assert_eq!(delete, None);
     }
 }
