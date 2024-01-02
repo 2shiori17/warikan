@@ -28,6 +28,9 @@ use axum_extra::{
 #[derive(Default, MergedObject)]
 pub struct Query(GroupQuery, PaymentQuery, UserQuery);
 
+#[derive(Default, MergedObject)]
+pub struct Mutation(GroupMutation);
+
 pub async fn graphql(
     State(state): State<app::State>,
     auth: AuthState,
