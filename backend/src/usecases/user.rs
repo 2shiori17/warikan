@@ -5,7 +5,7 @@ use crate::{
 use futures::future::try_join_all;
 
 impl UseCase {
-    pub async fn get_user_proper(
+    pub async fn get_user_opt(
         &self,
         id: &UserID,
     ) -> Result<Option<User>, Box<dyn std::error::Error + Send + Sync>> {

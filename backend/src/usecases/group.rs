@@ -4,7 +4,7 @@ use crate::{
 };
 
 impl UseCase {
-    pub async fn get_group_proper(
+    pub async fn get_group_opt(
         &self,
         id: &GroupID,
         auth: &AuthState,
@@ -34,13 +34,13 @@ impl UseCase {
         auth: &AuthState,
     ) -> Result<Group, Box<dyn std::error::Error + Send + Sync>> {
         let group = self
-            .get_group_proper(id, auth)
+            .get_group_opt(id, auth)
             .await?
             .ok_or(UseCaseError::NotFound)?;
         Ok(group)
     }
 
-    // TODO(2shiori17): `get_group_proper`を使ったロジックに変更する
+    // TODO(2shiori17): `get_group_opt`を使ったロジックに変更する
     pub async fn have_authority(&self, id: &GroupID, auth: &AuthState) -> bool {
         if let AuthState::Authorized(claims) = auth {
             if let Ok(Some(group)) = self.repository.get_group(id).await {

@@ -41,7 +41,7 @@ impl GroupQuery {
     ) -> async_graphql::Result<Option<Group>> {
         let usecase = ctx.data::<UseCase>()?;
         let auth = ctx.data::<AuthState>()?;
-        let group = usecase.get_group_proper(&id, auth).await?;
+        let group = usecase.get_group_opt(&id, auth).await?;
         Ok(group)
     }
 }

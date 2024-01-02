@@ -47,7 +47,7 @@ impl PaymentQuery {
     ) -> async_graphql::Result<Option<Payment>> {
         let usecase = ctx.data::<UseCase>()?;
         let auth = ctx.data::<AuthState>()?;
-        let payment = usecase.get_payment_proper(&id, auth).await?;
+        let payment = usecase.get_payment_opt(&id, auth).await?;
         Ok(payment)
     }
 }

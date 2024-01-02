@@ -4,7 +4,7 @@ use crate::{
 };
 
 impl UseCase {
-    pub async fn get_payment_proper(
+    pub async fn get_payment_opt(
         &self,
         id: &PaymentID,
         auth: &AuthState,
@@ -29,7 +29,7 @@ impl UseCase {
         auth: &AuthState,
     ) -> Result<Payment, Box<dyn std::error::Error + Send + Sync>> {
         let payment = self
-            .get_payment_proper(id, auth)
+            .get_payment_opt(id, auth)
             .await?
             .ok_or(UseCaseError::NotFound)?;
         Ok(payment)

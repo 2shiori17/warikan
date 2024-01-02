@@ -18,7 +18,7 @@ pub struct UserQuery;
 impl UserQuery {
     async fn get_user(&self, ctx: &Context<'_>, id: UserID) -> async_graphql::Result<Option<User>> {
         let usecase = ctx.data::<UseCase>()?;
-        let user = usecase.get_user_proper(&id).await?;
+        let user = usecase.get_user_opt(&id).await?;
         Ok(user)
     }
 }
