@@ -33,6 +33,7 @@ jobs:
     - uses: Swatinem/rust-cache@v2
     - uses: taiki-e/install-action@nextest
     - uses: taiki-e/install-action@cargo-llvm-cov
+    - uses: supercharge/mongodb-github-action@1.10.0
     - run: cargo llvm-cov nextest --lcov --output-path lcov.info
     - uses: codecov/codecov-action@v3
       with:
