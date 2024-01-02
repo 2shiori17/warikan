@@ -1,3 +1,4 @@
+use crate::entities::Claims;
 use async_graphql::{types::ID, NewType};
 use serde::{Deserialize, Serialize};
 
@@ -9,7 +10,7 @@ use rand::Rng;
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, NewType)]
 pub struct UserID(pub ID);
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[cfg_attr(test, derive(Dummy))]
 pub struct User {
     pub id: UserID,
@@ -32,5 +33,13 @@ impl Dummy<Faker> for UserID {
     fn dummy_with_rng<R: Rng + ?Sized>(config: &Faker, rng: &mut R) -> Self {
         let s = String::dummy_with_rng(config, rng);
         UserID(ID(s))
+    }
+}
+
+impl User {
+    pub fn new(auth: &Claims) -> Self {
+        Self {
+            id: UserID::new(&auth.sub),
+        }
     }
 }

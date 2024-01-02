@@ -62,6 +62,16 @@ pub trait PaymentRepository: Interface {
 #[async_trait]
 #[cfg_attr(test, automock)]
 pub trait UserRepository: Interface {
+    async fn create_user(
+        &self,
+        user: User,
+    ) -> Result<User, Box<dyn std::error::Error + Send + Sync>>;
+
+    async fn delete_user(
+        &self,
+        id: &UserID,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>>;
+
     async fn get_user(
         &self,
         id: &UserID,
@@ -115,6 +125,16 @@ mock! {
 
     #[async_trait]
     impl UserRepository for Repository {
+        async fn create_user(
+            &self,
+            user: User,
+        ) -> Result<User, Box<dyn std::error::Error + Send + Sync>>;
+
+        async fn delete_user(
+            &self,
+            id: &UserID,
+        ) -> Result<(), Box<dyn std::error::Error + Send + Sync>>;
+
         async fn get_user(
             &self,
             id: &UserID,

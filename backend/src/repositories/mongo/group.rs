@@ -69,6 +69,7 @@ impl GroupRepository for Mongo {
         Ok(result)
     }
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;

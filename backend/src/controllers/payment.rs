@@ -1,5 +1,5 @@
 use crate::{
-    entities::{AuthState, Group, Payment, PaymentID, User},
+    entities::{AuthState, Group, GroupID, Payment, PaymentID, User, UserID},
     usecases::UseCase,
 };
 use async_graphql::{Context, Object};
@@ -51,5 +51,35 @@ impl PaymentQuery {
         let auth = ctx.data::<AuthState>()?;
         let payment = usecase.get_payment_opt(&id, auth).await?;
         Ok(payment)
+    }
+}
+
+#[derive(Default)]
+pub struct PaymentMutation;
+
+#[Object]
+impl PaymentMutation {
+    async fn create_payment(
+        &self,
+        ctx: &Context<'_>,
+        group: GroupID,
+        creditor: UserID,
+        debtors: Vec<UserID>,
+    ) -> async_graphql::Result<Payment> {
+        let usecase = ctx.data::<UseCase>()?;
+        let auth = ctx.data::<AuthState>()?;
+        Ok(usecase
+            .create_payment(group, creditor, debtors, auth)
+            .await?)
+    }
+
+    async fn delete_payment(
+        &self,
+        ctx: &Context<'_>,
+        id: PaymentID,
+    ) -> async_graphql::Result<PaymentID> {
+        let usecase = ctx.data::<UseCase>()?;
+        let auth = ctx.data::<AuthState>()?;
+        Ok(usecase.delete_payment(&id, auth).await?)
     }
 }

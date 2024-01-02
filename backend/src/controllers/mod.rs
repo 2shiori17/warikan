@@ -29,7 +29,7 @@ use axum_extra::{
 pub struct Query(GroupQuery, PaymentQuery, UserQuery);
 
 #[derive(Default, MergedObject)]
-pub struct Mutation(GroupMutation);
+pub struct Mutation(GroupMutation, PaymentMutation, UserMutation);
 
 pub async fn graphql(
     State(state): State<app::State>,
