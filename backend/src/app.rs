@@ -1,10 +1,10 @@
 use crate::{
-    controllers::{graphiql, graphql, Query},
+    controllers::{graphiql, graphql, Mutation, Query},
     entities::Validator,
     repositories::{Mongo, MongoConfig, MongoError},
     usecases::UseCase,
 };
-use async_graphql::{EmptyMutation, EmptySubscription, Schema};
+use async_graphql::{EmptySubscription, Schema};
 use axum::{routing::get, Router};
 use clap::Parser;
 use shaku::{module, HasComponent};
@@ -52,7 +52,7 @@ pub enum Error {
 
 #[derive(Clone)]
 pub struct State {
-    pub schema: Schema<Query, EmptyMutation, EmptySubscription>,
+    pub schema: Schema<Query, Mutation, EmptySubscription>,
     pub validator: Validator,
 }
 
@@ -90,7 +90,7 @@ impl App {
         let usecase = UseCase::new(module.resolve());
 
         // GraphQL
-        let schema = Schema::build(Query::default(), EmptyMutation, EmptySubscription)
+        let schema = Schema::build(Query::default(), Mutation::default(), EmptySubscription)
             .data(usecase)
             .finish();
 

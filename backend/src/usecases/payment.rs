@@ -1,10 +1,39 @@
 use crate::{
-    entities::{AuthState, GroupID, Payment, PaymentID},
+    entities::{AuthState, GroupID, Payment, PaymentID, UserID},
     usecases::{UseCase, UseCaseError},
 };
 
 impl UseCase {
-    pub async fn get_payment_proper(
+    pub async fn create_payment(
+        &self,
+        group: GroupID,
+        creditor: UserID,
+        debtors: Vec<UserID>,
+        auth: &AuthState,
+    ) -> Result<Payment, Box<dyn std::error::Error + Send + Sync>> {
+        if self.have_authority_group(&group, auth).await {
+            let payment = Payment::new(group, creditor, debtors);
+            let payment = self.repository.create_payment(payment).await?;
+            Ok(payment)
+        } else {
+            Err(UseCaseError::UnAuthorized)?
+        }
+    }
+
+    pub async fn delete_payment(
+        &self,
+        id: &PaymentID,
+        auth: &AuthState,
+    ) -> Result<PaymentID, Box<dyn std::error::Error + Send + Sync>> {
+        if self.have_authority_payment(id, auth).await {
+            self.repository.delete_payment(id).await?;
+            Ok(id.clone())
+        } else {
+            Err(UseCaseError::UnAuthorized)?
+        }
+    }
+
+    pub async fn get_payment_opt(
         &self,
         id: &PaymentID,
         auth: &AuthState,
@@ -12,7 +41,7 @@ impl UseCase {
         Ok(
             if let Some(payment) = self.repository.get_payment(id).await? {
                 Some(
-                    self.have_authority(&payment.group, auth)
+                    self.have_authority_group(&payment.group, auth)
                         .await
                         .then_some(payment)
                         .ok_or(UseCaseError::UnAuthorized)?,
@@ -29,7 +58,7 @@ impl UseCase {
         auth: &AuthState,
     ) -> Result<Payment, Box<dyn std::error::Error + Send + Sync>> {
         let payment = self
-            .get_payment_proper(id, auth)
+            .get_payment_opt(id, auth)
             .await?
             .ok_or(UseCaseError::NotFound)?;
         Ok(payment)
@@ -40,11 +69,20 @@ impl UseCase {
         group: &GroupID,
         auth: &AuthState,
     ) -> Result<Vec<Payment>, Box<dyn std::error::Error + Send + Sync>> {
-        if !self.have_authority(group, auth).await {
+        if !self.have_authority_group(group, auth).await {
             return Err(UseCaseError::UnAuthorized)?;
         }
         let payments = self.repository.get_payments_by_group(group).await?;
         Ok(payments)
+    }
+
+    // TODO(2shiori17): `get_payment_opt`を使ったロジックに変更する
+    pub async fn have_authority_payment(&self, id: &PaymentID, auth: &AuthState) -> bool {
+        if let Ok(Some(payment)) = self.repository.get_payment(id).await {
+            self.have_authority_group(&payment.group, auth).await
+        } else {
+            false
+        }
     }
 }
 
@@ -57,6 +95,135 @@ mod tests {
     };
     use fake::{Fake, Faker};
     use std::sync::Arc;
+
+    #[tokio::test]
+    async fn create_payment_unauthorized_1() {
+        let group: Group = Faker.fake();
+        let creditor: UserID = Faker.fake();
+        let debtors: Vec<UserID> = Faker.fake();
+
+        let id = group.id.clone();
+        let auth = AuthState::UnAuthorized;
+
+        let mut mock = MockRepository::new();
+        mock.expect_create_payment()
+            .return_once(move |payment| Ok(payment));
+        mock.expect_get_group()
+            .return_once(move |_| Ok(Some(group)));
+
+        let usecase = UseCase::new(Arc::new(mock));
+        assert!(usecase
+            .create_payment(id, creditor, debtors, &auth)
+            .await
+            .is_err());
+    }
+
+    #[tokio::test]
+    async fn create_payment_unauthorized_2() {
+        let claims: Claims = Faker.fake();
+        let group: Group = Faker.fake();
+        let creditor: UserID = Faker.fake();
+        let debtors: Vec<UserID> = Faker.fake();
+
+        let id = group.id.clone();
+        let auth = AuthState::Authorized(claims);
+
+        let mut mock = MockRepository::new();
+        mock.expect_create_payment()
+            .return_once(move |payment| Ok(payment));
+        mock.expect_get_group()
+            .return_once(move |_| Ok(Some(group)));
+
+        let usecase = UseCase::new(Arc::new(mock));
+        assert!(usecase
+            .create_payment(id, creditor, debtors, &auth)
+            .await
+            .is_err());
+    }
+
+    #[tokio::test]
+    async fn create_payment_authorized() {
+        let mut claims: Claims = Faker.fake();
+        let group: Group = Faker.fake();
+        let creditor: UserID = Faker.fake();
+        let debtors: Vec<UserID> = Faker.fake();
+
+        claims.sub = group.participants[0].to_string();
+        let id = group.id.clone();
+        let auth = AuthState::Authorized(claims);
+
+        let mut mock = MockRepository::new();
+        mock.expect_create_payment()
+            .return_once(move |payment| Ok(payment));
+        mock.expect_get_group()
+            .return_once(move |_| Ok(Some(group)));
+
+        let usecase = UseCase::new(Arc::new(mock));
+        assert!(usecase
+            .create_payment(id, creditor, debtors, &auth)
+            .await
+            .is_ok());
+    }
+
+    #[tokio::test]
+    async fn delete_payment_unauthorized_1() {
+        let group: Group = Faker.fake();
+        let payment: Payment = Faker.fake();
+
+        let id = payment.id.clone();
+        let auth = AuthState::UnAuthorized;
+
+        let mut mock = MockRepository::new();
+        mock.expect_delete_payment().return_once(move |_| Ok(()));
+        mock.expect_get_payment()
+            .return_once(move |_| Ok(Some(payment)));
+        mock.expect_get_group()
+            .return_once(move |_| Ok(Some(group)));
+
+        let usecase = UseCase::new(Arc::new(mock));
+        assert!(usecase.delete_payment(&id, &auth).await.is_err());
+    }
+
+    #[tokio::test]
+    async fn delete_payment_unauthorized_2() {
+        let group: Group = Faker.fake();
+        let payment: Payment = Faker.fake();
+        let claims: Claims = Faker.fake();
+
+        let id = payment.id.clone();
+        let auth = AuthState::Authorized(claims);
+
+        let mut mock = MockRepository::new();
+        mock.expect_delete_payment().return_once(move |_| Ok(()));
+        mock.expect_get_payment()
+            .return_once(move |_| Ok(Some(payment)));
+        mock.expect_get_group()
+            .return_once(move |_| Ok(Some(group)));
+
+        let usecase = UseCase::new(Arc::new(mock));
+        assert!(usecase.delete_payment(&id, &auth).await.is_err());
+    }
+
+    #[tokio::test]
+    async fn delete_payment_authorized() {
+        let group: Group = Faker.fake();
+        let payment: Payment = Faker.fake();
+        let mut claims: Claims = Faker.fake();
+
+        claims.sub = group.participants[0].to_string();
+        let id = payment.id.clone();
+        let auth = AuthState::Authorized(claims);
+
+        let mut mock = MockRepository::new();
+        mock.expect_delete_payment().return_once(move |_| Ok(()));
+        mock.expect_get_payment()
+            .return_once(move |_| Ok(Some(payment)));
+        mock.expect_get_group()
+            .return_once(move |_| Ok(Some(group)));
+
+        let usecase = UseCase::new(Arc::new(mock));
+        assert!(usecase.delete_payment(&id, &auth).await.is_ok());
+    }
 
     #[tokio::test]
     async fn get_payment_unauthorized() {
@@ -82,8 +249,8 @@ mod tests {
         let payment: Payment = Faker.fake();
         let group: Group = Faker.fake();
         let mut claims: Claims = Faker.fake();
-        claims.sub = group.participants[0].to_string();
 
+        claims.sub = group.participants[0].to_string();
         let id = payment.id.clone();
         let auth = AuthState::Authorized(claims);
 
@@ -95,5 +262,101 @@ mod tests {
 
         let usecase = UseCase::new(Arc::new(mock));
         assert!(usecase.get_payment(&id, &auth).await.is_ok());
+    }
+
+    #[tokio::test]
+    async fn get_payments_by_group_unauthorized() {
+        let payments: Vec<Payment> = Faker.fake();
+        let group: Group = Faker.fake();
+        let claims: Claims = Faker.fake();
+
+        let id = group.id.clone();
+        let auth = AuthState::Authorized(claims);
+
+        let mut mock = MockRepository::new();
+        mock.expect_get_payments_by_group()
+            .return_once(move |_| Ok(payments));
+        mock.expect_get_group()
+            .return_once(move |_| Ok(Some(group)));
+
+        let usecase = UseCase::new(Arc::new(mock));
+        assert!(usecase.get_payments_by_group(&id, &auth).await.is_err());
+    }
+
+    #[tokio::test]
+    async fn get_payments_by_group_authorized() {
+        let payments: Vec<Payment> = Faker.fake();
+        let group: Group = Faker.fake();
+        let mut claims: Claims = Faker.fake();
+
+        claims.sub = group.participants[0].to_string();
+        let id = group.id.clone();
+        let auth = AuthState::Authorized(claims);
+
+        let mut mock = MockRepository::new();
+        mock.expect_get_payments_by_group()
+            .return_once(move |_| Ok(payments));
+        mock.expect_get_group()
+            .return_once(move |_| Ok(Some(group)));
+
+        let usecase = UseCase::new(Arc::new(mock));
+        assert!(usecase.get_payments_by_group(&id, &auth).await.is_ok());
+    }
+
+    #[tokio::test]
+    async fn have_authority_payment_unauthorized_1() {
+        let group: Group = Faker.fake();
+        let payment: Payment = Faker.fake();
+
+        let id = payment.id.clone();
+        let auth = AuthState::UnAuthorized;
+
+        let mut mock = MockRepository::new();
+        mock.expect_get_group()
+            .return_once(move |_| Ok(Some(group)));
+        mock.expect_get_payment()
+            .return_once(move |_| Ok(Some(payment)));
+
+        let usecase = UseCase::new(Arc::new(mock));
+        assert!(!usecase.have_authority_payment(&id, &auth).await);
+    }
+
+    #[tokio::test]
+    async fn have_authority_payment_unauthorized_2() {
+        let group: Group = Faker.fake();
+        let payment: Payment = Faker.fake();
+        let claims: Claims = Faker.fake();
+
+        let id = payment.id.clone();
+        let auth = AuthState::Authorized(claims);
+
+        let mut mock = MockRepository::new();
+        mock.expect_get_group()
+            .return_once(move |_| Ok(Some(group)));
+        mock.expect_get_payment()
+            .return_once(move |_| Ok(Some(payment)));
+
+        let usecase = UseCase::new(Arc::new(mock));
+        assert!(!usecase.have_authority_payment(&id, &auth).await);
+    }
+
+    #[tokio::test]
+    async fn have_authority_payment_authorized() {
+        let group: Group = Faker.fake();
+        let payment: Payment = Faker.fake();
+        let mut claims: Claims = Faker.fake();
+
+        claims.sub = group.participants[0].to_string();
+        let id = payment.id.clone();
+        let auth = AuthState::Authorized(claims);
+
+        let mut mock = MockRepository::new();
+        mock.expect_get_group()
+            .return_once(move |_| Ok(Some(group)));
+        mock.expect_get_payment()
+            .return_once(move |_| Ok(Some(payment)));
+
+        let usecase = UseCase::new(Arc::new(mock));
+        assert!(usecase.have_authority_payment(&id, &auth).await);
     }
 }
