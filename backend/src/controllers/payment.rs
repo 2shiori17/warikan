@@ -24,13 +24,15 @@ impl Payment {
 
     async fn creditor(&self, ctx: &Context<'_>) -> async_graphql::Result<User> {
         let usecase = ctx.data::<UseCase>()?;
-        let creditor = usecase.get_user(&self.creditor).await?;
+        let auth = ctx.data::<AuthState>()?;
+        let creditor = usecase.get_user(&self.creditor, auth).await?;
         Ok(creditor)
     }
 
     async fn debtors(&self, ctx: &Context<'_>) -> async_graphql::Result<Vec<User>> {
         let usecase = ctx.data::<UseCase>()?;
-        let debtors = usecase.get_users(&self.debtors).await?;
+        let auth = ctx.data::<AuthState>()?;
+        let debtors = usecase.get_users(&self.debtors, auth).await?;
         Ok(debtors)
     }
 }

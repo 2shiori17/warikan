@@ -59,7 +59,22 @@ mod tests {
     use std::sync::Arc;
 
     #[tokio::test]
-    async fn get_group_unauthorized() {
+    async fn get_group_unauthorized_1() {
+        let group: Group = Faker.fake();
+
+        let id = group.id.clone();
+        let auth = AuthState::UnAuthorized;
+
+        let mut mock = MockRepository::new();
+        mock.expect_get_group()
+            .return_once(move |_| Ok(Some(group)));
+
+        let usecase = UseCase::new(Arc::new(mock));
+        assert!(usecase.get_group(&id, &auth).await.is_err());
+    }
+
+    #[tokio::test]
+    async fn get_group_unauthorized_2() {
         let group: Group = Faker.fake();
         let claims: Claims = Faker.fake();
 
@@ -78,8 +93,8 @@ mod tests {
     async fn get_group_authorized() {
         let group: Group = Faker.fake();
         let mut claims: Claims = Faker.fake();
-        claims.sub = group.participants[0].to_string();
 
+        claims.sub = group.participants[0].to_string();
         let id = group.id.clone();
         let auth = AuthState::Authorized(claims);
 
@@ -89,5 +104,53 @@ mod tests {
 
         let usecase = UseCase::new(Arc::new(mock));
         assert!(usecase.get_group(&id, &auth).await.is_ok());
+    }
+
+    #[tokio::test]
+    async fn have_authority_unauthorized_1() {
+        let group: Group = Faker.fake();
+
+        let id = group.id.clone();
+        let auth = AuthState::UnAuthorized;
+
+        let mut mock = MockRepository::new();
+        mock.expect_get_group()
+            .return_once(move |_| Ok(Some(group)));
+
+        let usecase = UseCase::new(Arc::new(mock));
+        assert!(!usecase.have_authority(&id, &auth).await);
+    }
+
+    #[tokio::test]
+    async fn have_authority_unauthorized_2() {
+        let group: Group = Faker.fake();
+        let claims: Claims = Faker.fake();
+
+        let id = group.id.clone();
+        let auth = AuthState::Authorized(claims);
+
+        let mut mock = MockRepository::new();
+        mock.expect_get_group()
+            .return_once(move |_| Ok(Some(group)));
+
+        let usecase = UseCase::new(Arc::new(mock));
+        assert!(!usecase.have_authority(&id, &auth).await);
+    }
+
+    #[tokio::test]
+    async fn have_authority_authorized() {
+        let group: Group = Faker.fake();
+        let mut claims: Claims = Faker.fake();
+
+        claims.sub = group.participants[0].to_string();
+        let id = group.id.clone();
+        let auth = AuthState::Authorized(claims);
+
+        let mut mock = MockRepository::new();
+        mock.expect_get_group()
+            .return_once(move |_| Ok(Some(group)));
+
+        let usecase = UseCase::new(Arc::new(mock));
+        assert!(usecase.have_authority(&id, &auth).await);
     }
 }

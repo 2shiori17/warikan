@@ -17,7 +17,8 @@ impl Group {
 
     async fn participants(&self, ctx: &Context<'_>) -> async_graphql::Result<Vec<User>> {
         let usecase = ctx.data::<UseCase>()?;
-        let participants = usecase.get_users(&self.participants).await?;
+        let auth = ctx.data::<AuthState>()?;
+        let participants = usecase.get_users(&self.participants, auth).await?;
         Ok(participants)
     }
 
