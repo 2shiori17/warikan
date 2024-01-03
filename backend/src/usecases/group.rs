@@ -6,10 +6,11 @@ use crate::{
 impl UseCase {
     pub async fn create_group(
         &self,
+        title: String,
         auth: &AuthState,
     ) -> Result<Group, Box<dyn std::error::Error + Send + Sync>> {
         if let AuthState::Authorized(claims) = auth {
-            let group = Group::new(claims);
+            let group = Group::new(title, claims);
             let group = self.repository.create_group(group).await?;
             Ok(group)
         } else {
@@ -86,6 +87,7 @@ mod tests {
 
     #[tokio::test]
     async fn create_group_unauthorized() {
+        let title: String = Faker.fake();
         let auth = AuthState::UnAuthorized;
 
         let mut mock = MockRepository::new();
@@ -93,12 +95,13 @@ mod tests {
             .return_once(move |group| Ok(group));
 
         let usecase = UseCase::new(Arc::new(mock));
-        assert!(usecase.create_group(&auth).await.is_err());
+        assert!(usecase.create_group(title, &auth).await.is_err());
     }
 
     #[tokio::test]
     async fn create_group_authorized() {
         let claims: Claims = Faker.fake();
+        let title: String = Faker.fake();
         let auth = AuthState::Authorized(claims);
 
         let mut mock = MockRepository::new();
@@ -106,7 +109,7 @@ mod tests {
             .return_once(move |group| Ok(group));
 
         let usecase = UseCase::new(Arc::new(mock));
-        assert!(usecase.create_group(&auth).await.is_ok());
+        assert!(usecase.create_group(title, &auth).await.is_ok());
     }
 
     #[tokio::test]

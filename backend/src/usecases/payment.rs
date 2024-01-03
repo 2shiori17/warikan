@@ -6,13 +6,14 @@ use crate::{
 impl UseCase {
     pub async fn create_payment(
         &self,
+        title: String,
         group: GroupID,
         creditor: UserID,
         debtors: Vec<UserID>,
         auth: &AuthState,
     ) -> Result<Payment, Box<dyn std::error::Error + Send + Sync>> {
         if self.have_authority_group(&group, auth).await {
-            let payment = Payment::new(group, creditor, debtors);
+            let payment = Payment::new(title, group, creditor, debtors);
             let payment = self.repository.create_payment(payment).await?;
             Ok(payment)
         } else {
@@ -98,6 +99,7 @@ mod tests {
 
     #[tokio::test]
     async fn create_payment_unauthorized_1() {
+        let title: String = Faker.fake();
         let group: Group = Faker.fake();
         let creditor: UserID = Faker.fake();
         let debtors: Vec<UserID> = Faker.fake();
@@ -113,7 +115,7 @@ mod tests {
 
         let usecase = UseCase::new(Arc::new(mock));
         assert!(usecase
-            .create_payment(id, creditor, debtors, &auth)
+            .create_payment(title, id, creditor, debtors, &auth)
             .await
             .is_err());
     }
@@ -121,6 +123,7 @@ mod tests {
     #[tokio::test]
     async fn create_payment_unauthorized_2() {
         let claims: Claims = Faker.fake();
+        let title: String = Faker.fake();
         let group: Group = Faker.fake();
         let creditor: UserID = Faker.fake();
         let debtors: Vec<UserID> = Faker.fake();
@@ -136,7 +139,7 @@ mod tests {
 
         let usecase = UseCase::new(Arc::new(mock));
         assert!(usecase
-            .create_payment(id, creditor, debtors, &auth)
+            .create_payment(title, id, creditor, debtors, &auth)
             .await
             .is_err());
     }
@@ -144,6 +147,7 @@ mod tests {
     #[tokio::test]
     async fn create_payment_authorized() {
         let mut claims: Claims = Faker.fake();
+        let title: String = Faker.fake();
         let group: Group = Faker.fake();
         let creditor: UserID = Faker.fake();
         let debtors: Vec<UserID> = Faker.fake();
@@ -160,7 +164,7 @@ mod tests {
 
         let usecase = UseCase::new(Arc::new(mock));
         assert!(usecase
-            .create_payment(id, creditor, debtors, &auth)
+            .create_payment(title, id, creditor, debtors, &auth)
             .await
             .is_ok());
     }

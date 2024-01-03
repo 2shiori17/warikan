@@ -17,6 +17,7 @@ pub struct GroupID(pub ID);
 pub struct Group {
     pub id: GroupID,
     pub created_at: DateTime<Utc>,
+    pub title: String,
     #[cfg_attr(test, dummy(faker = "(Faker, 1..10)"))]
     pub participants: Vec<UserID>,
 }
@@ -42,10 +43,11 @@ impl Dummy<Faker> for GroupID {
 }
 
 impl Group {
-    pub fn new(auth: &Claims) -> Self {
+    pub fn new(title: String, auth: &Claims) -> Self {
         Self {
             id: GroupID::new(nanoid!()),
             created_at: Utc::now(),
+            title,
             participants: vec![UserID::new(&auth.sub)],
         }
     }
