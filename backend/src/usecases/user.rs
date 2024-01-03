@@ -92,8 +92,7 @@ mod tests {
     async fn create_user_unauthorized() {
         let auth = AuthState::UnAuthorized;
 
-        let mut mock = MockRepository::new();
-        mock.expect_create_user().return_once(move |user| Ok(user));
+        let mock = MockRepository::new();
 
         let usecase = UseCase::new(Arc::new(mock));
         assert!(usecase.create_user(&auth).await.is_err());
@@ -118,9 +117,7 @@ mod tests {
         let id = user.id.clone();
         let auth = AuthState::UnAuthorized;
 
-        let mut mock = MockRepository::new();
-        mock.expect_delete_user().return_once(move |_| Ok(()));
-        mock.expect_get_user().return_once(move |_| Ok(Some(user)));
+        let mock = MockRepository::new();
 
         let usecase = UseCase::new(Arc::new(mock));
         assert!(usecase.delete_user(&id, &auth).await.is_err());
@@ -135,7 +132,6 @@ mod tests {
         let auth = AuthState::Authorized(claims);
 
         let mut mock = MockRepository::new();
-        mock.expect_delete_user().return_once(move |_| Ok(()));
         mock.expect_get_user().return_once(move |_| Ok(Some(user)));
 
         let usecase = UseCase::new(Arc::new(mock));
@@ -166,8 +162,7 @@ mod tests {
         let id = user.id.clone();
         let auth = AuthState::UnAuthorized;
 
-        let mut mock = MockRepository::new();
-        mock.expect_get_user().return_once(move |_| Ok(Some(user)));
+        let mock = MockRepository::new();
 
         let usecase = UseCase::new(Arc::new(mock));
         assert!(usecase.get_user(&id, &auth).await.is_err());
@@ -211,8 +206,7 @@ mod tests {
         let id = user.id.clone();
         let auth = AuthState::UnAuthorized;
 
-        let mut mock = MockRepository::new();
-        mock.expect_get_user().return_once(move |_| Ok(Some(user)));
+        let mock = MockRepository::new();
 
         let usecase = UseCase::new(Arc::new(mock));
         assert!(usecase.get_users(&[id], &auth).await.is_err());
@@ -256,8 +250,7 @@ mod tests {
         let id = user.id.clone();
         let auth = AuthState::UnAuthorized;
 
-        let mut mock = MockRepository::new();
-        mock.expect_get_user().return_once(move |_| Ok(Some(user)));
+        let mock = MockRepository::new();
 
         let usecase = UseCase::new(Arc::new(mock));
         assert!(!usecase.have_authority_user(&id, &auth).await);

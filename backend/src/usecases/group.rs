@@ -90,9 +90,7 @@ mod tests {
         let title: String = Faker.fake();
         let auth = AuthState::UnAuthorized;
 
-        let mut mock = MockRepository::new();
-        mock.expect_create_group()
-            .return_once(move |group| Ok(group));
+        let mock = MockRepository::new();
 
         let usecase = UseCase::new(Arc::new(mock));
         assert!(usecase.create_group(title, &auth).await.is_err());
@@ -119,10 +117,7 @@ mod tests {
         let id = group.id.clone();
         let auth = AuthState::UnAuthorized;
 
-        let mut mock = MockRepository::new();
-        mock.expect_delete_group().return_once(move |_| Ok(()));
-        mock.expect_get_group()
-            .return_once(move |_| Ok(Some(group)));
+        let mock = MockRepository::new();
 
         let usecase = UseCase::new(Arc::new(mock));
         assert!(usecase.delete_group(&id, &auth).await.is_err());
@@ -137,7 +132,6 @@ mod tests {
         let auth = AuthState::Authorized(claims);
 
         let mut mock = MockRepository::new();
-        mock.expect_delete_group().return_once(move |_| Ok(()));
         mock.expect_get_group()
             .return_once(move |_| Ok(Some(group)));
 
@@ -170,9 +164,7 @@ mod tests {
         let id = group.id.clone();
         let auth = AuthState::UnAuthorized;
 
-        let mut mock = MockRepository::new();
-        mock.expect_get_group()
-            .return_once(move |_| Ok(Some(group)));
+        let mock = MockRepository::new();
 
         let usecase = UseCase::new(Arc::new(mock));
         assert!(usecase.get_group(&id, &auth).await.is_err());
@@ -218,9 +210,7 @@ mod tests {
         let id = group.id.clone();
         let auth = AuthState::UnAuthorized;
 
-        let mut mock = MockRepository::new();
-        mock.expect_get_group()
-            .return_once(move |_| Ok(Some(group)));
+        let mock = MockRepository::new();
 
         let usecase = UseCase::new(Arc::new(mock));
         assert!(!usecase.have_authority_group(&id, &auth).await);

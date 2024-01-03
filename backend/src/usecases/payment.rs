@@ -107,11 +107,7 @@ mod tests {
         let id = group.id.clone();
         let auth = AuthState::UnAuthorized;
 
-        let mut mock = MockRepository::new();
-        mock.expect_create_payment()
-            .return_once(move |payment| Ok(payment));
-        mock.expect_get_group()
-            .return_once(move |_| Ok(Some(group)));
+        let mock = MockRepository::new();
 
         let usecase = UseCase::new(Arc::new(mock));
         assert!(usecase
@@ -132,8 +128,6 @@ mod tests {
         let auth = AuthState::Authorized(claims);
 
         let mut mock = MockRepository::new();
-        mock.expect_create_payment()
-            .return_once(move |payment| Ok(payment));
         mock.expect_get_group()
             .return_once(move |_| Ok(Some(group)));
 
@@ -171,18 +165,14 @@ mod tests {
 
     #[tokio::test]
     async fn delete_payment_unauthorized_1() {
-        let group: Group = Faker.fake();
         let payment: Payment = Faker.fake();
 
         let id = payment.id.clone();
         let auth = AuthState::UnAuthorized;
 
         let mut mock = MockRepository::new();
-        mock.expect_delete_payment().return_once(move |_| Ok(()));
         mock.expect_get_payment()
             .return_once(move |_| Ok(Some(payment)));
-        mock.expect_get_group()
-            .return_once(move |_| Ok(Some(group)));
 
         let usecase = UseCase::new(Arc::new(mock));
         assert!(usecase.delete_payment(&id, &auth).await.is_err());
@@ -198,7 +188,6 @@ mod tests {
         let auth = AuthState::Authorized(claims);
 
         let mut mock = MockRepository::new();
-        mock.expect_delete_payment().return_once(move |_| Ok(()));
         mock.expect_get_payment()
             .return_once(move |_| Ok(Some(payment)));
         mock.expect_get_group()
@@ -270,7 +259,6 @@ mod tests {
 
     #[tokio::test]
     async fn get_payments_by_group_unauthorized() {
-        let payments: Vec<Payment> = Faker.fake();
         let group: Group = Faker.fake();
         let claims: Claims = Faker.fake();
 
@@ -278,8 +266,6 @@ mod tests {
         let auth = AuthState::Authorized(claims);
 
         let mut mock = MockRepository::new();
-        mock.expect_get_payments_by_group()
-            .return_once(move |_| Ok(payments));
         mock.expect_get_group()
             .return_once(move |_| Ok(Some(group)));
 
@@ -309,15 +295,12 @@ mod tests {
 
     #[tokio::test]
     async fn have_authority_payment_unauthorized_1() {
-        let group: Group = Faker.fake();
         let payment: Payment = Faker.fake();
 
         let id = payment.id.clone();
         let auth = AuthState::UnAuthorized;
 
         let mut mock = MockRepository::new();
-        mock.expect_get_group()
-            .return_once(move |_| Ok(Some(group)));
         mock.expect_get_payment()
             .return_once(move |_| Ok(Some(payment)));
 
