@@ -1,3 +1,5 @@
+use futures::future::try_join_all;
+
 use crate::{
     entities::{AuthState, Group, GroupID, UserID},
     usecases::{UseCase, UseCaseError},
@@ -24,6 +26,14 @@ impl UseCase {
         auth: &AuthState,
     ) -> Result<GroupID, Box<dyn std::error::Error + Send + Sync>> {
         if self.have_authority_group(id, auth).await {
+            try_join_all(
+                self.repository
+                    .get_payments_by_group(id)
+                    .await?
+                    .iter()
+                    .map(|payment| async { self.repository.delete_payment(&payment.id).await }),
+            )
+            .await?;
             self.repository.delete_group(id).await?;
             Ok(id.clone())
         } else {
@@ -81,7 +91,10 @@ impl UseCase {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{entities::Claims, repositories::MockRepository};
+    use crate::{
+        entities::{Claims, Payment},
+        repositories::MockRepository,
+    };
     use fake::{Fake, Faker};
     use std::sync::Arc;
 
@@ -142,16 +155,21 @@ mod tests {
     #[tokio::test]
     async fn delete_group_authorized() {
         let group: Group = Faker.fake();
+        let mut payments: Vec<Payment> = vec![Faker.fake()];
         let mut claims: Claims = Faker.fake();
 
+        payments[0].group = group.id.clone();
         claims.sub = group.participants[0].to_string();
         let id = group.id.clone();
         let auth = AuthState::Authorized(claims);
 
         let mut mock = MockRepository::new();
+        mock.expect_delete_payment().return_once(move |_| Ok(()));
         mock.expect_delete_group().return_once(move |_| Ok(()));
         mock.expect_get_group()
             .return_once(move |_| Ok(Some(group)));
+        mock.expect_get_payments_by_group()
+            .return_once(move |_| Ok(payments));
 
         let usecase = UseCase::new(Arc::new(mock));
         assert!(usecase.delete_group(&id, &auth).await.is_ok());
