@@ -33,6 +33,11 @@ pub trait GroupRepository: Interface {
         &self,
         id: &GroupID,
     ) -> Result<Option<Group>, Box<dyn std::error::Error + Send + Sync>>;
+
+    async fn get_groups_by_user(
+        &self,
+        id: &UserID,
+    ) -> Result<Vec<Group>, Box<dyn std::error::Error + Send + Sync>>;
 }
 
 #[async_trait]
@@ -98,6 +103,11 @@ mock! {
             &self,
             id: &GroupID,
         ) -> Result<Option<Group>, Box<dyn std::error::Error + Send + Sync>>;
+
+        async fn get_groups_by_user(
+            &self,
+            id: &UserID,
+        ) -> Result<Vec<Group>, Box<dyn std::error::Error + Send + Sync>>;
     }
 
     #[async_trait]

@@ -46,6 +46,12 @@ impl GroupQuery {
         let auth = ctx.data::<AuthState>()?;
         Ok(usecase.get_group_opt(&id, auth).await?)
     }
+
+    async fn get_groups_by_user(&self, ctx: &Context<'_>) -> async_graphql::Result<Vec<Group>> {
+        let usecase = ctx.data::<UseCase>()?;
+        let auth = ctx.data::<AuthState>()?;
+        Ok(usecase.get_groups_by_user(auth).await?)
+    }
 }
 
 #[derive(Default)]

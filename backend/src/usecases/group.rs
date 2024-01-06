@@ -77,6 +77,21 @@ impl UseCase {
         Ok(group)
     }
 
+    pub async fn get_groups_by_user(
+        &self,
+        auth: &AuthState,
+    ) -> Result<Vec<Group>, Box<dyn std::error::Error + Send + Sync>> {
+        if let AuthState::Authorized(claims) = auth {
+            let groups = self
+                .repository
+                .get_groups_by_user(&UserID::new(&claims.sub))
+                .await?;
+            Ok(groups)
+        } else {
+            Err(UseCaseError::UnAuthorized)?
+        }
+    }
+
     // TODO(2shiori17): `get_group_opt`を使ったロジックに変更する
     pub async fn have_authority_group(&self, id: &GroupID, auth: &AuthState) -> bool {
         if let AuthState::Authorized(claims) = auth {
@@ -219,6 +234,32 @@ mod tests {
 
         let usecase = UseCase::new(Arc::new(mock));
         assert!(usecase.get_group(&id, &auth).await.is_ok());
+    }
+
+    #[tokio::test]
+    async fn get_groups_by_user_unauthorized() {
+        let auth = AuthState::UnAuthorized;
+
+        let mock = MockRepository::new();
+
+        let usecase = UseCase::new(Arc::new(mock));
+        assert!(usecase.get_groups_by_user(&auth).await.is_err());
+    }
+
+    #[tokio::test]
+    async fn get_groups_by_user_authorized() {
+        let groups: Vec<Group> = vec![Faker.fake()];
+        let mut claims: Claims = Faker.fake();
+
+        claims.sub = groups[0].participants[0].to_string();
+        let auth = AuthState::Authorized(claims);
+
+        let mut mock = MockRepository::new();
+        mock.expect_get_groups_by_user()
+            .return_once(move |_| Ok(groups));
+
+        let usecase = UseCase::new(Arc::new(mock));
+        assert!(usecase.get_groups_by_user(&auth).await.is_ok());
     }
 
     #[tokio::test]

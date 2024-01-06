@@ -1,8 +1,9 @@
 use crate::{
-    entities::{Group, GroupID},
+    entities::{Group, GroupID, UserID},
     repositories::{GroupRepository, Mongo, MongoError, MONGO_COLLECTION_GROUPS},
 };
 use async_trait::async_trait;
+use futures::stream::TryStreamExt;
 use mongodb::{
     bson::{doc, Bson},
     options::IndexOptions,
@@ -68,6 +69,18 @@ impl GroupRepository for Mongo {
 
         Ok(result)
     }
+
+    async fn get_groups_by_user(
+        &self,
+        id: &UserID,
+    ) -> Result<Vec<Group>, Box<dyn std::error::Error + Send + Sync>> {
+        let groups: Collection<Group> = self.database.collection(MONGO_COLLECTION_GROUPS);
+
+        let filter = doc! { "participants": id };
+        let result = groups.find(filter, None).await?.try_collect().await?;
+
+        Ok(result)
+    }
 }
 
 #[cfg(test)]
@@ -109,5 +122,32 @@ mod tests {
         let delete = mongo.get_group(&create.id).await.unwrap();
 
         assert_eq!(delete, None);
+    }
+
+    #[tokio::test]
+    async fn get_groups_by_user() {
+        let mongo = Mongo::new(MongoConfig {
+            uri: "mongodb://localhost:27017",
+            database: "warikan",
+        })
+        .await
+        .unwrap();
+
+        let user: UserID = Faker.fake();
+
+        let mut group1: Group = Faker.fake();
+        let mut group2: Group = Faker.fake();
+        let group3: Group = Faker.fake();
+
+        group1.participants.push(user.clone());
+        group2.participants.push(user.clone());
+
+        let _ = mongo.create_group(group1.clone()).await.unwrap();
+        let _ = mongo.create_group(group2.clone()).await.unwrap();
+        let _ = mongo.create_group(group3).await.unwrap();
+
+        let groups = mongo.get_groups_by_user(&user).await.unwrap();
+
+        assert_eq!(groups, vec![group1, group2]);
     }
 }
