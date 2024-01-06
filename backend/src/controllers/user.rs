@@ -9,6 +9,10 @@ impl User {
     async fn id(&self) -> UserID {
         self.id.clone()
     }
+
+    async fn name(&self) -> String {
+        self.name.clone()
+    }
 }
 
 #[derive(Default)]
@@ -29,10 +33,10 @@ pub struct UserMutation;
 
 #[Object]
 impl UserMutation {
-    async fn create_user(&self, ctx: &Context<'_>) -> async_graphql::Result<User> {
+    async fn create_user(&self, ctx: &Context<'_>, name: String) -> async_graphql::Result<User> {
         let usecase = ctx.data::<UseCase>()?;
         let auth = ctx.data::<AuthState>()?;
-        Ok(usecase.create_user(auth).await?)
+        Ok(usecase.create_user(name, auth).await?)
     }
 
     async fn delete_user(&self, ctx: &Context<'_>, id: UserID) -> async_graphql::Result<UserID> {

@@ -7,10 +7,11 @@ use futures::future::try_join_all;
 impl UseCase {
     pub async fn create_user(
         &self,
+        name: String,
         auth: &AuthState,
     ) -> Result<User, Box<dyn std::error::Error + Send + Sync>> {
         if let AuthState::Authorized(claims) = auth {
-            let user = User::new(claims);
+            let user = User::new(name, claims);
             let user = self.repository.create_user(user).await?;
             Ok(user)
         } else {
@@ -90,16 +91,18 @@ mod tests {
 
     #[tokio::test]
     async fn create_user_unauthorized() {
+        let name: String = Faker.fake();
         let auth = AuthState::UnAuthorized;
 
         let mock = MockRepository::new();
 
         let usecase = UseCase::new(Arc::new(mock));
-        assert!(usecase.create_user(&auth).await.is_err());
+        assert!(usecase.create_user(name, &auth).await.is_err());
     }
 
     #[tokio::test]
     async fn create_user_authorized() {
+        let name: String = Faker.fake();
         let claims: Claims = Faker.fake();
         let auth = AuthState::Authorized(claims);
 
@@ -107,7 +110,7 @@ mod tests {
         mock.expect_create_user().return_once(move |user| Ok(user));
 
         let usecase = UseCase::new(Arc::new(mock));
-        assert!(usecase.create_user(&auth).await.is_ok());
+        assert!(usecase.create_user(name, &auth).await.is_ok());
     }
 
     #[tokio::test]

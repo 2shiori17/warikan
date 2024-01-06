@@ -14,6 +14,7 @@ pub struct UserID(pub ID);
 #[cfg_attr(test, derive(Dummy))]
 pub struct User {
     pub id: UserID,
+    pub name: String,
 }
 
 impl UserID {
@@ -37,9 +38,10 @@ impl Dummy<Faker> for UserID {
 }
 
 impl User {
-    pub fn new(auth: &Claims) -> Self {
+    pub fn new(name: String, auth: &Claims) -> Self {
         Self {
             id: UserID::new(&auth.sub),
+            name,
         }
     }
 }
