@@ -15,6 +15,10 @@ impl Payment {
         self.created_at
     }
 
+    async fn title(&self) -> String {
+        self.title.clone()
+    }
+
     async fn group(&self, ctx: &Context<'_>) -> async_graphql::Result<Group> {
         let usecase = ctx.data::<UseCase>()?;
         let auth = ctx.data::<AuthState>()?;
@@ -62,6 +66,7 @@ impl PaymentMutation {
     async fn create_payment(
         &self,
         ctx: &Context<'_>,
+        title: String,
         group: GroupID,
         creditor: UserID,
         debtors: Vec<UserID>,
@@ -69,7 +74,7 @@ impl PaymentMutation {
         let usecase = ctx.data::<UseCase>()?;
         let auth = ctx.data::<AuthState>()?;
         Ok(usecase
-            .create_payment(group, creditor, debtors, auth)
+            .create_payment(title, group, creditor, debtors, auth)
             .await?)
     }
 

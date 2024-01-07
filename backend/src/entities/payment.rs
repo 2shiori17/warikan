@@ -17,6 +17,7 @@ pub struct PaymentID(pub ID);
 pub struct Payment {
     pub id: PaymentID,
     pub created_at: DateTime<Utc>,
+    pub title: String,
     pub group: GroupID,
     pub creditor: UserID,
     #[cfg_attr(test, dummy(faker = "(Faker, 1..10)"))]
@@ -44,10 +45,11 @@ impl Dummy<Faker> for PaymentID {
 }
 
 impl Payment {
-    pub fn new(group: GroupID, creditor: UserID, debtors: Vec<UserID>) -> Self {
+    pub fn new(title: String, group: GroupID, creditor: UserID, debtors: Vec<UserID>) -> Self {
         Self {
             id: PaymentID::new(nanoid!()),
             created_at: Utc::now(),
+            title,
             group,
             creditor,
             debtors,

@@ -15,6 +15,10 @@ impl Group {
         self.created_at
     }
 
+    async fn title(&self) -> String {
+        self.title.clone()
+    }
+
     async fn participants(&self, ctx: &Context<'_>) -> async_graphql::Result<Vec<User>> {
         let usecase = ctx.data::<UseCase>()?;
         let auth = ctx.data::<AuthState>()?;
@@ -42,6 +46,12 @@ impl GroupQuery {
         let auth = ctx.data::<AuthState>()?;
         Ok(usecase.get_group_opt(&id, auth).await?)
     }
+
+    async fn get_groups_by_user(&self, ctx: &Context<'_>) -> async_graphql::Result<Vec<Group>> {
+        let usecase = ctx.data::<UseCase>()?;
+        let auth = ctx.data::<AuthState>()?;
+        Ok(usecase.get_groups_by_user(auth).await?)
+    }
 }
 
 #[derive(Default)]
@@ -49,10 +59,10 @@ pub struct GroupMutation;
 
 #[Object]
 impl GroupMutation {
-    async fn create_group(&self, ctx: &Context<'_>) -> async_graphql::Result<Group> {
+    async fn create_group(&self, ctx: &Context<'_>, title: String) -> async_graphql::Result<Group> {
         let usecase = ctx.data::<UseCase>()?;
         let auth = ctx.data::<AuthState>()?;
-        Ok(usecase.create_group(auth).await?)
+        Ok(usecase.create_group(title, auth).await?)
     }
 
     async fn delete_group(&self, ctx: &Context<'_>, id: GroupID) -> async_graphql::Result<GroupID> {

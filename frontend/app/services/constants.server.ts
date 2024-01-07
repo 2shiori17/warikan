@@ -2,6 +2,7 @@ import { config } from 'dotenv';
 
 config();
 
+export const API_URL = process.env.API_URL!;
 export const SESSION_SECRET = process.env.SESSION_SECRET!;
 
 export const AUTH0_DOMAIN = process.env.AUTH0_DOMAIN!;

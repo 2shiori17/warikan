@@ -20,6 +20,8 @@ module.exports = {
     es6: true,
   },
 
+  ignorePatterns: ["**/gql/**"],
+
   // Base config
   extends: ["eslint:recommended"],
 
